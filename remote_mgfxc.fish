@@ -56,14 +56,14 @@ function remote_mgfxc
                 echo -n "$title for $filename"
                 set_color -o
                 if set -q location[1]
-                    echo "at $location"
+                    echo " at $location"
                 else
                     echo
                     echo $first_line_rest
                 end
                 set_color normal
                 set_color red
-                echo $first_line_rest[2]
+                echo $first_line_rest
                 echo -n $error | tail -n +2
 
                 mv $output_filename $error_filename
