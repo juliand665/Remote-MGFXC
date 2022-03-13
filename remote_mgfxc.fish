@@ -1,5 +1,9 @@
 #!/usr/local/bin/fish
 
+# NOTE: this function expects you to have a host specified in the variable $REMOTE_MGFXC_HOST
+# i'd recommend using the fish command `set -Ux REMOTE_MGFXC_HOST <hostname>` to set it permanently
+# you can also set $REMOTE_MGFXC_PORT--the port defaults to 44321 if unset
+
 function remote_mgfxc
     set -l filenames $argv[1..]
     set -l should_skip 0
@@ -20,7 +24,11 @@ function remote_mgfxc
             echo "Compiling $filename"
             set_color normal
             rm -f $output_filename
-            curl -sk --header "Content-Type:application/octet-stream" --data-binary @$filename "https://example.com:44322/compiler?filename=$basename" --output $output_filename
+            set -l port $REMOTE_MGFXC_PORT
+            if not set -q port
+                set -l port 44321
+            end
+            curl -s --header "Content-Type:application/octet-stream" --data-binary @$filename "http://$REMOTE_MGFXC_HOST:$port/compiler?filename=$basename" --output $output_filename
             set -l curl_status $status
 
             if test $curl_status -ne 0
@@ -37,7 +45,7 @@ function remote_mgfxc
                 set -l error
                 begin
                     set -l IFS
-                    set error (cat $output_filename | jq -r .detail | string replace -a '\r' '\n')
+                    set error (cat $output_filename | jq -r .detail | string replace -a '\r' '\n' | string replace -a '\\\\' '\\')
                 end
                 set -l first_line_parts (echo $error | head -1 | string split -m1 .fx)
 
