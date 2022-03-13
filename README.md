@@ -20,7 +20,7 @@ In the MGCB Editor, you can simply click the root element ("Content") of your pr
 
 You should now be able to select the "Remote Effect Compiler" processor for any .fx file. You can then set the host & port of your compiler server under the processor parameters. (You will unfortunately have to do this every time, but you can easily copy-paste this stuff in the .mgcb file).
 
-<img src="GitHub/processor selection.png" alt="processor selection" style="zoom:50%;" />
+<img src="GitHub/processor selection.png" alt="processor selection" style="width: 366px" />
 
 #### Fish Script
 
