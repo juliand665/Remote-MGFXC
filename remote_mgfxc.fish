@@ -25,8 +25,8 @@ function remote_mgfxc
             set_color normal
             rm -f $output_filename
             set -l port $REMOTE_MGFXC_PORT
-            if not set -q port
-                set -l port 44321
+            if not set -q port[1]
+                set port 44321
             end
             curl -s --header "Content-Type:application/octet-stream" --data-binary @$filename "http://$REMOTE_MGFXC_HOST:$port/compiler?filename=$basename" --output $output_filename
             set -l curl_status $status
@@ -42,37 +42,11 @@ function remote_mgfxc
                 set_color -o red
                 echo "Curl request succeeded but produced no output!"
             else if test (head -c 1 $output_filename) = "{"
-                set -l error
-                begin
-                    set -l IFS
-                    set error (cat $output_filename | jq -r .detail | string replace -a '\r' '\n' | string replace -a '\\\\' '\\')
-                end
-                set -l first_line_parts (echo $error | head -1 | string split -m1 .fx)
-
-                set -l location
-                set -l first_line_rest
-                if set -q first_line_parts[2]
-                    set -l next_split (echo $first_line_parts[2] | string split -m1 ': ')
-                    set location $next_split[1]
-                    set first_line_rest $next_split[2]
-                else
-                    set first_line_rest $first_line_parts[1]
-                end
-
                 set_color brred
                 set -l title (cat $output_filename | jq -r .title)
-                echo -n "$title for $filename"
-                set_color -o
-                if set -q location[1]
-                    echo " at $location"
-                else
-                    echo
-                    echo $first_line_rest
-                end
-                set_color normal
+                echo "$title for $filename"
                 set_color red
-                echo $first_line_rest
-                echo -n $error | tail -n +2
+                cat $output_filename | jq -r .detail
 
                 mv $output_filename $error_filename
             else
