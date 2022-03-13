@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using IOFile = System.IO.File;
 
 namespace EffectCompiler.Controllers
@@ -41,7 +41,7 @@ namespace EffectCompiler.Controllers
                 cmd.StartInfo.UseShellExecute = false;
                 cmd.Start();
 
-                cmd.StandardInput.WriteLine("mgfxc {0} {1}", inputPath, outputPath); // /Profile:OpenGL
+				cmd.StandardInput.WriteLine("mgfxc {0} {1}", inputPath, outputPath);
                 cmd.StandardInput.Flush();
                 cmd.StandardInput.Close();
                 await cmd.WaitForExitAsync();
@@ -54,7 +54,12 @@ namespace EffectCompiler.Controllers
                 else
                 {
                     string output = cmd.StandardError.ReadToEnd();
-                    return Problem(title: "Error executing MGFXC", detail: output);
+					var fullFilePath = Path.Combine(Directory.GetCurrentDirectory(), inputPath);
+					var strippedLines = output
+						.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+						.Select(line => line.StartsWith(fullFilePath) ? line.Substring(fullFilePath.Length) : line);
+					var error = string.Join(Environment.NewLine, strippedLines);
+					return Problem(title: "Error executing MGFXC", detail: error);
                 }
             }
             finally
