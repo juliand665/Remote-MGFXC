@@ -19,7 +19,8 @@ namespace EffectCompiler.Controllers
             Console.WriteLine("Using filename: {0}", filename);
             var tempFolder = "temp_compiler_files";
             Directory.CreateDirectory(tempFolder);
-            var inputPath = Path.Combine(tempFolder, filename + ".fx");
+            var inputFilename = filename + ".fx";
+            var inputPath = Path.Combine(tempFolder, inputFilename);
             var outputPath = Path.Combine(tempFolder, filename + ".ogl.mgfxo");
 
             IOFile.Delete(inputPath);
@@ -54,10 +55,11 @@ namespace EffectCompiler.Controllers
                 else
                 {
                     string output = cmd.StandardError.ReadToEnd();
-					var fullFilePath = Path.Combine(Directory.GetCurrentDirectory(), inputPath);
+					var fullFilePath = Path.Combine(Directory.GetCurrentDirectory(), inputPath)
+                        .Replace("\\", "\\\\"); // lmao why
 					var strippedLines = output
 						.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-						.Select(line => line.StartsWith(fullFilePath) ? line.Substring(fullFilePath.Length) : line);
+						.Select(line => line.Replace(fullFilePath, inputFilename));
 					var error = string.Join(Environment.NewLine, strippedLines);
 					return Problem(title: "Error executing MGFXC", detail: error);
                 }

@@ -25,7 +25,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": "true",
-      "applicationUrl": "https://windows-server.fritz.box:5001;http://windows-server.fritz.box:5000"
+      "applicationUrl": "https://windows-server.fritz.box:44322;http://windows-server.fritz.box:44321"
     }
   }
 }
