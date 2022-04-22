@@ -4,12 +4,11 @@
 # if you're using fish, i'd recommend using `set -Ux REMOTE_MGFXC_HOST <hostname>` to set it permanently
 # you can also set $REMOTE_MGFXC_PORT--the port defaults to 44321 if unset
 
-from io import FileIO
 import os
 import sys
 import re
-from typing import Dict
 import requests
+from typing import Dict
 
 host = os.getenv("REMOTE_MGFXC_HOST")
 port = os.getenv("REMOTE_MGFXC_PORT") or 44321
