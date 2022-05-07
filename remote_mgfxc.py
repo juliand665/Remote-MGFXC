@@ -6,6 +6,7 @@
 
 import os
 import sys
+import argparse
 import re
 import requests
 from typing import Dict
@@ -16,12 +17,17 @@ if host is None:
     print("REMOTE_MGFXC_HOST not set!")
     sys.exit(1)
 
-filenames = sys.argv[1:]
-force_recompile = True
+parser = argparse.ArgumentParser(description="Remotely compile a file with MGFXC.")
+parser.add_argument("input_path", help="The path to the input file.")
+parser.add_argument("output_path", nargs="?", help="The path to the output file.")
+parser.add_argument(
+    "-d", "--define", dest="defines", action="append", help="Define assignments."
+)
+args = parser.parse_args()
+defines = ";".join(args.defines or [])
 
-if len(filenames) == 0:
-    filenames = [f for f in os.listdir(".") if f.endswith(".fx")]
-    force_recompile = False
+input_folder = os.path.dirname(args.input_path)
+input_filename = os.path.basename(args.input_path)
 
 
 class Style:
@@ -44,14 +50,11 @@ files: Dict[str, str] = {}
 
 
 def read_file(filename: str):
-    with open(filename, "r", encoding="utf-8-sig") as file:
+    with open(os.path.join(input_folder, filename), "r", encoding="utf-8-sig") as file:
         files[filename] = file.read()
 
 
-for filename in filenames:
-    read_file(filename)
-
-root_filenames = set(filenames)
+read_file(input_filename)
 
 
 def inline_includes(filename: str):
@@ -62,8 +65,6 @@ def inline_includes(filename: str):
         match = re.match(include_regex, line)
         if match:
             include_filename = match.group(1)
-            if include_filename in root_filenames:
-                root_filenames.remove(include_filename)
             if include_filename not in files:
                 read_file(include_filename)
 
@@ -79,46 +80,33 @@ def inline_includes(filename: str):
 
 
 # inline included files
-for filename in filenames:
-    inline_includes(filename)
+inline_includes(input_filename)
 
 
-for input_filename in root_filenames:
-    print()
-    # basename with stripped .fx extension
-    basename, extension = os.path.splitext(os.path.basename(input_filename))
-    assert extension == ".fx"
-    output_filename = f"{basename}.ogl.mgfxo"
+basename, extension = os.path.splitext(os.path.basename(input_filename))
+assert extension == ".fx"
+output_path = args.output_path or f"{basename}.ogl.mgfxo"
 
-    if (
-        not force_recompile
-        and os.path.exists(output_filename)
-        and (os.path.getmtime(output_filename) > os.path.getmtime(input_filename))
-    ):
-        print_styled(f"Skipping {input_filename}", Style.bright_black)
-        continue
+# remove previous output
+if os.path.exists(output_path):
+    os.remove(output_path)
 
-    # remove previous output
-    if os.path.exists(output_filename):
-        os.remove(output_filename)
+print_styled(f"Compiling {input_filename}", Style.bold)
 
-    print_styled(f"Compiling {input_filename}", Style.bold)
+# run the compiler
+url = f"http://{host}:{port}/compiler?filename={basename}"
+# print(files[input_filename])
+response = requests.post(url, data=files[input_filename].encode("utf-8"))
 
-    # run the compiler
-    url = f"http://{host}:{port}/compiler?filename={basename}"
-    # print(files[input_filename])
-    response = requests.post(url, data=files[input_filename].encode("utf-8"))
-
-    if response.status_code == 200:
-        with open(output_filename, "wb") as output_file:
-            output_file.write(response.content)
-        print_styled("Successfully compiled!", Style.green)
-    elif response.status_code == 500:
-        error_json = response.json()
-        title = error_json["title"]
-        detail = error_json["detail"]
-        print_styled(f"{title} for {input_filename}:", Style.bright_red)
-        print_styled(detail, Style.red)
-    else:
-        print_styled(f"Unknown error code: {response.status_code}", Style.bright_red)
-print()
+if response.status_code == 200:
+    with open(output_path, "wb") as output_file:
+        output_file.write(response.content)
+    print_styled("Successfully compiled!", Style.green)
+elif response.status_code == 500:
+    error_json = response.json()
+    title = error_json["title"]
+    detail = error_json["detail"]
+    print_styled(f"{title} for {input_filename}:", Style.bright_red)
+    print_styled(detail, Style.red)
+else:
+    print_styled(f"Unknown error code: {response.status_code}", Style.bright_red)

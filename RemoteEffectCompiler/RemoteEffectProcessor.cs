@@ -32,10 +32,12 @@ namespace RemoteEffectCompiler
 
 			var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
 			var filename = Path.GetFileNameWithoutExtension(input.Identity.SourceFilename);
+			var builder = new UriBuilder(scheme: "http", host: Host, port: int.Parse(Port), pathValue: $"/compiler");
+			builder.Query = $"defines={Defines}";
 			var response = client.PostAsync(
-				$"http://{Host}:{Port}/compiler?filename={filename}",
-				new StringContent(input.EffectCode)
-			).Result;
+				builder.Uri,
+				new StringContent(input.EffectCode))
+				.Result;
 
 			if (!response.IsSuccessStatusCode)
 			{
@@ -45,8 +47,7 @@ namespace RemoteEffectCompiler
 					.ReadObject(response.Content.ReadAsStreamAsync().Result) as ProblemDetails;
 				throw new InvalidContentException(
 					$"Remote compiler failed with status code {response.StatusCode}:\n{details.detail}",
-					input.Identity
-				);
+					input.Identity);
 			}
 
 			var bytecode = response.Content.ReadAsByteArrayAsync().Result;
