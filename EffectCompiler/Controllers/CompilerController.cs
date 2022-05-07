@@ -36,7 +36,7 @@ namespace EffectCompiler.Controllers
 				cmd.Start();
 
 				var args = new StringBuilder();
-				const string defineRegex = @"^[\w\d_-.=;]+$";
+				const string defineRegex = @"^[\w\d_\-.=;]*$";
 				if (!Regex.IsMatch(defines, defineRegex))
 					return BadRequest("Invalid defines: " + defines);
 				args.Append($"/Defines:{defines}");
