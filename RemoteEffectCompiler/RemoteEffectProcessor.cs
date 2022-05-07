@@ -42,7 +42,7 @@ namespace RemoteEffectCompiler
 			if (!response.IsSuccessStatusCode)
 			{
 				string errorDescription;
-				if (response.Content.Headers.ContentType.MediaType == "application/json")
+				if (response.Content.Headers.ContentType.MediaType == "application/problem+json")
 				{
 					var details = new DataContractJsonSerializer(typeof(ProblemDetails))
 						.ReadObject(response.Content.ReadAsStreamAsync().Result) as ProblemDetails;
@@ -52,9 +52,9 @@ namespace RemoteEffectCompiler
 				{
 					errorDescription = response.Content.ReadAsStringAsync().Result;
 				}
-				throw new InvalidContentException(
-					$"Remote compiler failed with status code {response.StatusCode}:\n{errorDescription}",
-					input.Identity);
+				var fullDescription = $"Remote compiler failed with status code {response.StatusCode}:\n{errorDescription}";
+				Console.Error.WriteLine(fullDescription);
+				throw new InvalidContentException(fullDescription, input.Identity);
 			}
 
 			var bytecode = response.Content.ReadAsByteArrayAsync().Result;
