@@ -19,6 +19,7 @@ namespace EffectCompiler.Controllers
 		{
 			var inputPath = Path.GetTempFileName();
 			var outputPath = Path.GetTempFileName();
+			IOFile.Delete(outputPath);
 
 			try
 			{
@@ -65,7 +66,7 @@ namespace EffectCompiler.Controllers
 							var space = lineWithoutPath.IndexOf(' ');
 							if (space > 0)
 							{
-								var lineNumber = int.Parse(lineWithoutPath.Substring(1, length: lineWithoutPath.IndexOf(' ') - 1));
+								var lineNumber = int.Parse(lineWithoutPath[1..lineWithoutPath.IndexOf(',')]);
 								strippedLines.Add("");
 								strippedLines.Add($"> {lines[lineNumber - 1]}");
 							}
