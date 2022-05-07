@@ -94,7 +94,7 @@ if os.path.exists(output_path):
 print_styled(f"Compiling {input_filename}", Style.bold)
 
 # run the compiler
-url = f"http://{host}:{port}/compiler?filename={basename}"
+url = f"http://{host}:{port}/compiler?defines={defines};"
 # print(files[input_filename])
 response = requests.post(url, data=files[input_filename].encode("utf-8"))
 
