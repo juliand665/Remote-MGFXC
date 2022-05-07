@@ -103,10 +103,16 @@ if response.status_code == 200:
         output_file.write(response.content)
     print_styled("Successfully compiled!", Style.green)
 elif response.status_code == 500:
-    error_json = response.json()
+    try:
+        error_json = response.json()
+    except:
+        print_styled("Unknown error!", Style.red)
+        print(response.text)
+        sys.exit(1)
     title = error_json["title"]
     detail = error_json["detail"]
     print_styled(f"{title} for {input_filename}:", Style.bright_red)
     print_styled(detail, Style.red)
 else:
     print_styled(f"Unknown error code: {response.status_code}", Style.bright_red)
+    print(response.text)
