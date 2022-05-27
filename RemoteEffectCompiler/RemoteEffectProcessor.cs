@@ -28,10 +28,6 @@ namespace RemoteEffectCompiler
 
 		public override CompiledEffectContent Process(EffectContent input, ContentProcessorContext context)
 		{
-			// process locally if possible
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-				return base.Process(input, context);
-
 			var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
 			var filename = Path.GetFileNameWithoutExtension(input.Identity.SourceFilename);
 			var builder = new UriBuilder(scheme: "http", host: Host, port: int.Parse(Port), pathValue: $"/compiler");
